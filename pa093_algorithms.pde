@@ -14,30 +14,27 @@ void setup() {
 
 void draw() {
   background(255);
+  
   fill(0);
   stroke(0);
   strokeWeight(strokeWeight);
-  
   for (Point p: points_g) {
     point(p.x, p.y);
   }
   
-  
-  //strokeWeight(2);
-  //for (int i = 1; i < points_g.size(); i++) {
-  //  line(points_g.get(i-1).x, points_g.get(i-1).y, points_g.get(i).x, points_g.get(i).y);
-  //}
-  if (useGrahamScan) {
-    List<Point> hullPoints = grahamScan(points_g);
-    hullPoints.add(hullPoints.get(0)); 
-  
-    strokeWeight(2);
-    for (int i = 1; i < hullPoints.size(); i++) {
-      float c = map(i, 0, hullPoints.size(), 0, 255);
-      stroke(c);
-      line(hullPoints.get(i-1).x, hullPoints.get(i-1).y, hullPoints.get(i).x, hullPoints.get(i).y);
+  if (!points_g.isEmpty()) {
+    if (useGrahamScan) {
+      List<Point> hullPoints = grahamScan(points_g);
+      hullPoints.add(hullPoints.get(0)); 
+    
+      strokeWeight(2);
+      for (int i = 1; i < hullPoints.size(); i++) {
+        float c = map(i, 0, hullPoints.size(), 0, 255);
+        stroke(c);
+        line(hullPoints.get(i-1).x, hullPoints.get(i-1).y, hullPoints.get(i).x, hullPoints.get(i).y);
+      }
     }
-  } 
+  }   
 }
 
 void mousePressed() {
