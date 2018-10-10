@@ -1,10 +1,12 @@
+import java.util.*;
+
 ArrayList<Point> points_g = new ArrayList();
 int strokeWeight = 15;
 Point selectedPoint;
 int randomPointsCount = 20;
 
 void setup() {
-  size(640, 480);
+  size(640, 640);
   
   points_g = generateRandomPoints(randomPointsCount);
 }
@@ -12,10 +14,27 @@ void setup() {
 void draw() {
   background(255);
   fill(0);
+  stroke(0);
   strokeWeight(strokeWeight);
   
   for (Point p: points_g) {
     point(p.x, p.y);
+  }
+  
+  
+  //strokeWeight(2);
+  //for (int i = 1; i < points_g.size(); i++) {
+  //  line(points_g.get(i-1).x, points_g.get(i-1).y, points_g.get(i).x, points_g.get(i).y);
+  //}
+  
+  List<Point> hullPoints = grahamScan(points_g);
+  hullPoints.add(hullPoints.get(0));
+  
+  strokeWeight(2);
+  for (int i = 1; i < hullPoints.size(); i++) {
+    float c = map(i, 0, hullPoints.size(), 0, 255);
+    stroke(c);
+    line(hullPoints.get(i-1).x, hullPoints.get(i-1).y, hullPoints.get(i).x, hullPoints.get(i).y);
   }
 }
 
@@ -96,4 +115,100 @@ class Point {
     x = x_;
     y = y_;
   }
+  
+  String toString() {
+   return "<Point: x=" + this.x + ", y=" + this.y + ">";
+  }
+}
+
+// COMPARATORS
+
+class PointBiggestXSmallestYComparator implements Comparator<Point> {
+  int compare(Point first, Point second) {
+    if (first.x > second.x) {
+      return -1;
+    } else if (first.x == second.x && first.y < second.y) {
+      return -1;
+    } else if (first.x == second.x && first.y == second.y) {
+      return 0;
+    } else {
+      return 1;
+    }
+  }
+}
+
+class PointSmallestYBiggestXComparator implements Comparator<Point> {
+  int compare(Point first, Point second) {
+    if (first.y < second.y) {
+      return -1;
+    } else if (first.y == second.y && first.x > second.x) {
+      return -1;
+    } else if (first.y == second.y && first.x == second.x) {
+      return 0;
+    } else {
+      return 1;
+    }
+  }
+}
+
+// HELPER FUNCTIONS
+
+double crossProduct(Point a, Point b, Point c) {
+  return (b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x);
+}
+
+boolean isTurnLeft(Point a, Point b, Point c) {
+  return crossProduct(a, b, c) > 0;
+}
+
+// CONVEX HULL ALGORITHMS
+
+List<Point> grahamScan(List<Point> points_) {
+  if (points_ == null || points_.isEmpty()) {
+    println("List of points can't be empty");
+    return points_;
+  }
+  // sort points by coordinates and get pivot
+  List<Point> pointsSorted = new ArrayList(points_);
+  Collections.sort(pointsSorted, new PointSmallestYBiggestXComparator());
+  
+  Point pivot = pointsSorted.get(0);
+  
+  // sort points by angle with pivot
+  PVector pivotVector = new PVector(1, 0);
+  List<Float> angles = new ArrayList();
+  float angleMax = 0f;
+  SortedMap<Float, Point> pointsSortedAngles = new TreeMap();
+  pointsSortedAngles.put(0f, pivot);
+  
+  for (int i = 1; i < pointsSorted.size(); i++) {
+    PVector otherVector = new PVector(pivot.x-pointsSorted.get(i).x, pivot.y-pointsSorted.get(i).y);
+    float angle = degrees(PVector.angleBetween(pivotVector, otherVector));
+    
+    pointsSortedAngles.put(angle, pointsSorted.get(i));
+  }
+  
+  pointsSorted = new ArrayList(pointsSortedAngles.values());
+  angles = new ArrayList(pointsSortedAngles.keySet());
+  
+  if (pointsSorted.size() < 3) {
+    return pointsSorted;
+  }
+  
+  // convex hull
+  Stack<Point> pointStack = new Stack();
+  pointStack.push(pointsSorted.get(0));
+  pointStack.push(pointsSorted.get(1));
+  int j = 2;
+  while (j < pointsSorted.size()) {
+    int stackSize = pointStack.size();
+    if (isTurnLeft(pointsSorted.get(j), pointStack.get(stackSize-1), pointStack.get(stackSize-2))) {
+      pointStack.push(pointsSorted.get(j));
+      j++;
+    } else {
+      pointStack.pop();
+    }
+  } //<>//
+  
+  return pointStack;
 }
