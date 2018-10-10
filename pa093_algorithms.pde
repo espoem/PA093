@@ -8,25 +8,25 @@ boolean useGrahamScan = false;
 
 void setup() {
   size(640, 640);
-  
+
   points_g = generateRandomPoints(randomPointsCount);
 }
 
 void draw() {
-  background(255);
-  
+  background(240);
+
   fill(0);
   stroke(0);
   strokeWeight(strokeWeight);
   for (Point p: points_g) {
     point(p.x, p.y);
   }
-  
+
   if (!points_g.isEmpty()) {
     if (useGrahamScan) {
       List<Point> hullPoints = grahamScan(points_g);
-      hullPoints.add(hullPoints.get(0)); 
-    
+      hullPoints.add(hullPoints.get(0));
+
       strokeWeight(2);
       for (int i = 1; i < hullPoints.size(); i++) {
         float c = map(i, 0, hullPoints.size(), 0, 255);
@@ -34,7 +34,38 @@ void draw() {
         line(hullPoints.get(i-1).x, hullPoints.get(i-1).y, hullPoints.get(i).x, hullPoints.get(i).y);
       }
     }
-  }   
+  }
+
+  drawMenu();
+}
+
+enum Menu {
+  CLEAR_WINDOW("c - clear window"),
+  ADD_RANDOM_POINTS("g - add random points"),
+  GRAHAM_SCAN("w - Graham scan convex hull");
+
+  private String text;
+
+  private Menu(String text) {
+    this.text = text;
+  }
+
+  String toString() {
+    return text;
+  }
+}
+
+void drawMenu() {
+  final int TEXT_SIZE = 14;
+  final int PADDING_TOP = 10;
+  final int PADDING_LEFT = 10;
+  textSize(TEXT_SIZE);
+  fill(0, 200, 50);
+  int idx = 1;
+  for (Menu item: Menu.values()) {
+    text(item.toString(), PADDING_LEFT, TEXT_SIZE*idx + PADDING_TOP);
+    idx++;
+  }
 }
 
 void mousePressed() {
@@ -77,7 +108,7 @@ void addRemovePoint() {
   selectedPoint = point;
   ArrayList<Point> points_new = new ArrayList();
   boolean removed = false;
-  
+
   for (Point p: points_g) {
     if (removed || !overPoint(p, mouseX, mouseY, strokeWeight/2)) {
       points_new.add(p);
@@ -86,7 +117,7 @@ void addRemovePoint() {
       selectedPoint = p;
     }
   }
-  
+
   points_g = points_new;
   if (!removed) {
     points_g.add(point);
@@ -111,12 +142,12 @@ boolean overPoint(Point point_, float x_, float y_, float r_) {
 class Point {
   float x;
   float y;
-  
+
   Point(float x_, float y_) {
     x = x_;
     y = y_;
   }
-  
+
   String toString() {
    return "<Point: x=" + this.x + ", y=" + this.y + ">";
   }
@@ -172,30 +203,30 @@ List<Point> grahamScan(List<Point> points_) {
   // sort points by coordinates and get pivot
   List<Point> pointsSorted = new ArrayList(points_);
   Collections.sort(pointsSorted, new PointSmallestYBiggestXComparator());
-  
+
   Point pivot = pointsSorted.get(0);
-  
+
   // sort points by angle with pivot
   PVector pivotVector = new PVector(1, 0);
   List<Float> angles = new ArrayList();
   float angleMax = 0f;
   SortedMap<Float, Point> pointsSortedAngles = new TreeMap();
   pointsSortedAngles.put(0f, pivot);
-  
+
   for (int i = 1; i < pointsSorted.size(); i++) {
     PVector otherVector = new PVector(pivot.x-pointsSorted.get(i).x, pivot.y-pointsSorted.get(i).y);
     float angle = degrees(PVector.angleBetween(pivotVector, otherVector));
-    
+
     pointsSortedAngles.put(angle, pointsSorted.get(i));
   }
-  
+
   pointsSorted = new ArrayList(pointsSortedAngles.values());
   angles = new ArrayList(pointsSortedAngles.keySet());
-  
+
   if (pointsSorted.size() < 3) {
     return pointsSorted;
   }
-  
+
   // convex hull
   Stack<Point> pointStack = new Stack();
   pointStack.push(pointsSorted.get(0));
@@ -209,7 +240,7 @@ List<Point> grahamScan(List<Point> points_) {
     } else {
       pointStack.pop();
     }
-  } //<>//
-  
+  }
+
   return pointStack;
 }
